@@ -4,7 +4,7 @@ import numpy as np
 import joblib
 
 #load model
-model = joblib.load(r'F:\python\PythonProject\adt_predictor_rf.pkl')
+model = joblib.load('adt_predictor_rf.pkl')
 
 #标题
 st.title("咖啡店罗盘")
