@@ -7,21 +7,22 @@ import joblib
 
 #标题
 st.title("咖啡店罗盘")
-st.write("输入新店基本信息，系统将预测开业稳定后的日均交易单量（ADT）和年利润（SPC）.")
+st.write("输入新店基本信息，系统将预测开业稳定后的日均交易单量（ADT）、年收入NetRevenue和年利润（SPC）.")
 
 #load model
 @st.cache_resource
 def load_models():
     adt_model = joblib.load('adt_predictor_rf.pkl')
     spc_model = joblib.load('spc_predictor_rf.pkl')
-    return adt_model, spc_model
+    net_model = joblib.load('net_predictor_rf.pkl')
+    return adt_model, spc_model, net_model
 
 #加载平均AT
 @st.cache_data
 def load_avg_at():
     return pd.read_csv('avg_at.csv')
 
-adt_model, spc_model = load_models()
+adt_model, spc_model, net_model = load_models()
 avg_at_df = load_avg_at()
 
 #使用cat 避免产生无效选项
@@ -81,18 +82,19 @@ input_data = pd.DataFrame({
     'channel_sub':[channel_sub],
     'design_type':[design_type],
     'area':[area],
-    'FY25_P12_rent':[rent],
+    'FY24_rent':[rent],
     'rent_per_square':[rent_per_square],
     'avg_at':[avg_at]
 })
 
 if st.button("预测"):
     adt_pred = adt_model.predict(input_data)[0]
-    monthly_spc_pred = spc_model.predict(input_data)[0]
-    annual_spc_pred = monthly_spc_pred * 12
+    spc_pred = spc_model.predict(input_data)[0]
+    net_pred = net_model.predict(input_data)[0]
     
     st.success(f"预测日均交易单量(ADT)为:{adt_pred:.0f}笔")
-    st.success(f"预测年利润（SPC）为：{annual_spc_pred:,.0f} 元")
+    st.success(f"预测年收入（NetRevenue）为：{net_pred:,.0f} 元")
+    st.success(f"预测年利润（SPC）为：{spc_pred:,.0f} 元")
 
 # 新增，投资回收期
 # 根据设计类型估计投资成本（元/平米）
@@ -110,11 +112,9 @@ else:
     investment = area * 8000
 
 #预估投资成本+投资回收期
-
-annual_spc_pred = spc_model.predict(input_data)[0] * 12
-
-if annual_spc_pred > 0:
-    payback_years = investment /annual_spc_pred
+spc_pred = spc_model.predict(input_data)[0]
+if spc_pred > 0:
+    payback_years = investment /spc_pred
     st.info(f"预估投资成本：{investment:,.0f}元")
     st.info(f"预估投资回收期:{payback_years:.1f}年")
 else:
