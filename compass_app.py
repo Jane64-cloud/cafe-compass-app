@@ -1,25 +1,26 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
-import joblib
+import pickle
+import streamlit as st
 
 #load model
 model = joblib.load('adt_predictor_rf.pkl')
+with open('categories.pkl', 'rb') as f:
+    categories = pickle.load(f)
+
+preprocessor = model.named_steps['preprocessor']
 
 #标题
 st.title("咖啡店罗盘")
 st.write("输入新店基本信息，系统将预测开业稳定后的日均交易单量（ADT）.")
 
 #用户输入
-province = st.selectbox("省份/直辖市（按首字母排序）", ['安徽省','北京市','福建省','甘肃省','广东省','广西自治区','贵州省','海南省','河北省','河南省','黑龙江省','湖北省','湖南省','吉林省','江苏省','江西省','辽宁省','内蒙古自治','宁夏自治区','青海省','山东省','山西省','陕西省','上海市','四川省','天津市','云南省','浙江省','重庆市'])
-tier = st.selectbox("城市等级", ['T1', 'T2', 'T3', 'T4', 'T5'])
-channel = st.selectbox("请选择商圈",['keycity 大型综合商圈', '市级商业中心区', '区域级商业区', '社区型商业', '办公商圈（写字楼、园区）', '住宅',
-                                 '旅游', '交通枢纽', '特殊商圈（学校、医院、博物馆）'])
-sub_channel = st.selectbox("请选择商区", ['机场','各类办公园区','电影院','商业街','书店/图书馆等文化场所','百货','企业总部','企业总部-内部',
-                                     '高速公路服务区','医院','酒店','奢侈品商场','购物中心','超市/大卖场','地铁','社区-商业中心','写字楼门店',
-                                     '办公-餐饮街','奥莱','街铺','火车站','餐饮/酒吧街','服务社区的商区','专业市场','独立性较强的景点，一般需购票进入',
-                                     '剧院/音乐厅','旅游特色商业街','大学','其他商业类型','其他办公类型','其他类型社区店','其他旅游类型','其他类型交通枢纽'
-                                     ,'其他特殊类型'])
+province = st.selectbox("省份/直辖市（按首字母排序）", categories['province'])
+tier = st.selectbox("城市等级", categories['Tier'])
+channel = st.selectbox("请选择商圈", categories['channel'])
+sub_channel = st.selectbox("请选择商区", categories['channel_sub'])
+
 area = st.number_input("面积（平方米）", min_value=0.0, value=0.0)
 #租金输入方式，二选一
 rent_input_method = st.radio('租金输入方式', ['月租总金额', '每平米月租金额'])
