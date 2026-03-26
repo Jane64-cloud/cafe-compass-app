@@ -4,7 +4,7 @@ import numpy as np
 import joblib
 
 #load model
-model = joblib.load('adt_predictor_rf.pkl')
+model = joblib.load(r'F:\python\PythonProject\adt_predictor_rf.pkl')
 
 #标题
 st.title("咖啡店罗盘")
@@ -40,9 +40,9 @@ else:
     
 #将输入转为 Dataframe
 input_data = pd.DataFrame({
+    'Tier':[tier],
     'channel':[channel],
     'channel_sub':[sub_channel],
-    'Tier':[tier],
     'area':[area],
     'FY25_P12_rent':[rent],
     'rent_per_square':[rent_per_square]
