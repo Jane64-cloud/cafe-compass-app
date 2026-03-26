@@ -92,7 +92,7 @@ if st.button("预测"):
     annual_spc_pred = monthly_spc_pred * 12
     
     st.success(f"预测日均交易单量(ADT)为:{adt_pred:.0f}笔")
-    st.success(f"预测年利润（SPC）为：{annual_spc_pred:.0f} 元")
+    st.success(f"预测年利润（SPC）为：{annual_spc_pred:,.0f} 元")
 
 # 新增，投资回收期
 # 根据设计类型估计投资成本（元/平米）
