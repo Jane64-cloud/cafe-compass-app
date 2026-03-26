@@ -3,9 +3,11 @@ import pandas as pd
 import numpy as np
 import pickle
 import streamlit as st
+import joblib
 
 #load model
 model = joblib.load('adt_predictor_rf.pkl')
+
 with open('categories.pkl', 'rb') as f:
     categories = pickle.load(f)
 
