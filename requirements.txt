@@ -4,7 +4,7 @@ numpy
 scikit-learn
 lightgbm
 joblib
-random
+
 
 
 # 数据处理与科学计算
