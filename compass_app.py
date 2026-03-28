@@ -94,7 +94,7 @@ with st.sidebar:
     st.divider()
     st.header("📜 租赁条款")
 
-    lease_term = st.number_input("租期（年）", min_value=1, max_value=10, value=10, step=1)
+    lease_term = st.number_input("租期（年）", min_value=1, max_value=20, value=10, step=1)
     first_year_rent = st.number_input("首年租金（元/年）", min_value=0, value=500000, step=50000)
     rent_escalation = st.number_input("年租金递增比例（%）", min_value=0.0, value=3.0, step=0.5) / 100.0
 
@@ -124,13 +124,13 @@ def predict_year(year, rent, province, city, tier, channel, channel_sub, design_
     city_spc = city_spc_mean.get(city, global_spc_mean)
     city_at = city_at_mean.get(city, global_at_mean)
 
-    # 构造输入特征（列名必须与训练时一致！）
+    # 构造输入特征
     input_df = pd.DataFrame([{
         'year': year,
-        'Rent': rent,
+        'Rent': Rent,
         'province': province,
         'city': city,
-        'Tier': tier,
+        'Tier': Tier,
         'channel': channel,
         'channel_sub': channel_sub,
         'design_type': design_type,
@@ -183,7 +183,7 @@ if st.button("🔮 开始预测", type="primary"):
     results = []
     for year, rent in zip(years, rents):
         adt, net, spc, be_adt = predict_year(
-            year, rent, province, city, tier, channel, channel_sub, design_type, area
+            year, Rent, province, city, Tier, channel, channel_sub, design_type, area
         )
         results.append([year, rent, adt, net, spc, be_adt])
 
