@@ -128,15 +128,15 @@ def predict_year(year, Rent, province, city, Tier, channel, channel_sub, design_
     input_df = pd.DataFrame([{
         'year': year,
         'Rent': Rent,
-        'province': province,
-        'city': city,
+        'area': area，
+        'city_at_mean': city_at,
+        'city_spc_mean': city_spc,
         'Tier': Tier,
         'channel': channel,
         'channel_sub': channel_sub,
         'design_type': design_type,
-        'area': area,
-        'city_spc_mean': city_spc,
-        'city_at_mean': city_at
+        'province': province,
+        'city': city
     }])
 
     # 确保分类特征为字符串类型（LightGBM 自动处理）
@@ -164,9 +164,9 @@ def predict_year(year, Rent, province, city, Tier, channel, channel_sub, design_
     depreciation = random.uniform(0.05, 0.08)
     
     # 利润SPC = NetRevenue - 原料成本 - 人工成本 - 水电杂费 - 折旧 - 租金
-    # 令利润=0 => NetRevenue*(1-op_rate-labor_rate) - rent = 0
-    if (1 - op_rate - labor_rate - utilities - depreciation) > 0:
-        required_net = Rent / (1 - op_rate - labor_rate - utilities - depreciation)
+    # 令利润=0 => NetRevenue*(1-materical_rate-labor_rate) - rent = 0
+    if (1 - materical_rate - labor_rate - utilities - depreciation) > 0:
+        required_net = Rent / (1 - materical_rate - labor_rate - utilities - depreciation)
         # 每单收入 = NetRevenue / ADT
         if adt > 0:
             avg_revenue_per_trans = net / adt
