@@ -167,8 +167,8 @@ def predict_year(year, Rent, area, Tier, channel, channel_sub, design_type, prov
     
     if (1 - total_cost_rate) > 0 and adt > 0:
         required_net = Rent / (1 - total_cost_rate)
-        avg_revenue_per_trans = net / adt
-        break_even_adt = (required_net / avg_revenue_per_trans).round(0)
+        break_even_adt = required_net * adt / net
+        break_even_adt = int(round(break_even_adt))
     else:
         break_even_adt = np.nan
     
