@@ -83,8 +83,8 @@ with st.sidebar:
     city = st.selectbox("城市", cities_in_province)
 
     # 自动填充城市等级
-    tier = city_df.loc[city_df['city'] == city, 'Tier'].values[0]
-    st.text_input("城市等级", value=tier, disabled=True)
+    Tier = city_df.loc[city_df['city'] == city, 'Tier'].values[0]
+    st.text_input("城市等级", value=Tier, disabled=True)
 
     channel = st.selectbox("商圈", CHANNELS)
     channel_sub = st.selectbox("子商圈", CHANNEL_SUBS)
@@ -95,8 +95,8 @@ with st.sidebar:
     st.header("📜 租赁条款")
 
     lease_term = st.number_input("租期（年）", min_value=1, max_value=20, value=10, step=1)
-    first_year_rent = st.number_input("首年租金（元/年）", min_value=0, value=500000, step=50000)
-    rent_escalation = st.number_input("年租金递增比例（%）", min_value=0.0, value=3.0, step=0.5) / 100.0
+    first_year_rent = st.number_input("首年租金（元/年）", min_value=0, value=0, step=10000)
+    rent_escalation = st.number_input("年租金递增比例（%）", min_value=0.0, value=0.0, step=0.5) / 100.0
 
     # 投资成本估算（根据设计类型）
     cost_per_sqm = {
@@ -115,7 +115,7 @@ years = [start_year + i for i in range(lease_term)]
 rents = [first_year_rent * (1 + rent_escalation) ** i for i in range(lease_term)]
 
 # ---------- 预测函数 ----------
-def predict_year(year, rent, province, city, tier, channel, channel_sub, design_type, area):
+def predict_year(year, Rent, province, city, Tier, channel, channel_sub, design_type, area):
     """
     对单个年份预测 ADT、NetRevenue 和 SPC（两阶段）。
     返回：adt, net, spc, break_even_adt
@@ -166,7 +166,7 @@ def predict_year(year, rent, province, city, tier, channel, channel_sub, design_
     # 利润SPC = NetRevenue - 原料成本 - 人工成本 - 水电杂费 - 折旧 - 租金
     # 令利润=0 => NetRevenue*(1-op_rate-labor_rate) - rent = 0
     if (1 - op_rate - labor_rate - utilities - depreciation) > 0:
-        required_net = rent / (1 - op_rate - labor_rate - utilities - depreciation)
+        required_net = Rent / (1 - op_rate - labor_rate - utilities - depreciation)
         # 每单收入 = NetRevenue / ADT
         if adt > 0:
             avg_revenue_per_trans = net / adt
@@ -181,11 +181,11 @@ def predict_year(year, rent, province, city, tier, channel, channel_sub, design_
 # ---------- 主按钮和结果展示 ----------
 if st.button("🔮 开始预测", type="primary"):
     results = []
-    for year, rent in zip(years, rents):
+    for year, Rent in zip(years, rents):
         adt, net, spc, be_adt = predict_year(
-            year, rent, province, city, Tier, channel, channel_sub, design_type, area
+            year, Rent, province, city, Tier, channel, channel_sub, design_type, area
         )
-        results.append([year, rent, adt, net, spc, be_adt])
+        results.append([year, Rent, adt, net, spc, be_adt])
 
     result_df = pd.DataFrame(results, columns=[
         '年份', '年租金', 'ADT', '年收入', '年利润', '盈亏平衡ADT'
