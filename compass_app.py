@@ -67,7 +67,7 @@ CHANNEL_SUBS = [
     '奢侈品商场', '购物中心', '百货', '超市/大卖场', '社区-商业中心', '奥莱',
     '服务社区的商区', '办公-餐饮街', '写字楼门店', '各类办公园区', '企业总部',
     '企业总部-内部', '机场', '火车站', '高速公路服务区', '地铁',
-    '独立性较强的景点，一般需购票进入', '旅游特色商业街', '大学', '医院',
+    '独立性较强的景点,一般需购票进入', '旅游特色商业街', '大学', '医院',
     '酒店', '街铺', '商业街', '专业市场', '餐饮/酒吧街', '书店/图书馆等文化场所',
     '电影院', '剧院/音乐厅'
 ]
@@ -115,7 +115,7 @@ years = [start_year + i for i in range(lease_term)]
 rents = [first_year_rent * (1 + rent_escalation) ** i for i in range(lease_term)]
 
 # ---------- 预测函数 ----------
-def predict_year(year, Rent, province, city, Tier, channel, channel_sub, design_type, area):
+def predict_year(year, Rent, area, Tier, channel, channel_sub, design_type, province, city):
     """
     对单个年份预测 ADT、NetRevenue 和 SPC（两阶段）。
     返回：adt, net, spc, break_even_adt
@@ -140,7 +140,7 @@ def predict_year(year, Rent, province, city, Tier, channel, channel_sub, design_
     }])
 
     # 确保分类特征为字符串类型（LightGBM 自动处理）
-    cat_cols = ['province', 'city', 'Tier', 'channel', 'channel_sub', 'design_type']
+    cat_cols = ['Tier', 'channel', 'channel_sub', 'design_type', 'province', 'city']
     for col in cat_cols:
         input_df[col] = input_df[col].astype('category')
 
@@ -158,32 +158,28 @@ def predict_year(year, Rent, province, city, Tier, channel, channel_sub, design_
 
     # ---------- 盈亏平衡点 ADT 计算 ----------
     # 随机生成运营成本率（25%~30%）和人工成本率（13%~15%）
-    materical_rate = random.uniform(0.25, 0.30)
+    material_rate = random.uniform(0.25, 0.30)
     labor_rate = random.uniform(0.18, 0.25)
     utilities = random.uniform(0.03, 0.05)
     depreciation = random.uniform(0.05, 0.08)
     
-    # 利润SPC = NetRevenue - 原料成本 - 人工成本 - 水电杂费 - 折旧 - 租金
-    # 令利润=0 => NetRevenue*(1-materical_rate-labor_rate) - rent = 0
-    if (1 - materical_rate - labor_rate - utilities - depreciation) > 0:
-        required_net = Rent / (1 - materical_rate - labor_rate - utilities - depreciation)
-        # 每单收入 = NetRevenue / ADT
-        if adt > 0:
-            avg_revenue_per_trans = net / adt
-            break_even_adt = (required_net / avg_revenue_per_trans).round(0)
-        else:
-            break_even_adt = np.nan
+    total_cost_rate = material_rate + labor_rate + utilities + depreciation
+    
+    if (1 - total_cost_rate) > 0 and adt > 0:
+        required_net = rent / (1 - total_cost_rate)
+        avg_revenue_per_trans = net / adt
+        break_even_adt = (required_net / avg_revenue_per_trans).round(0)
     else:
         break_even_adt = np.nan
-
+    
     return adt, net, spc, break_even_adt
 
 # ---------- 主按钮和结果展示 ----------
 if st.button("🔮 开始预测", type="primary"):
     results = []
-    for year, Rent in zip(years, rents):
+    for year, Rent in zip(years, Rents):
         adt, net, spc, be_adt = predict_year(
-            year, Rent, province, city, Tier, channel, channel_sub, design_type, area
+           year, Rent, area, Tier, channel, channel_sub, design_type, province, city
         )
         results.append([year, Rent, adt, net, spc, be_adt])
 
