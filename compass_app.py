@@ -177,7 +177,7 @@ def predict_year(year, Rent, area, Tier, channel, channel_sub, design_type, prov
 # ---------- 主按钮和结果展示 ----------
 if st.button("🔮 开始预测", type="primary"):
     results = []
-    for year, Rent in zip(years, Rents):
+    for year, Rent in zip(years, rents):
         adt, net, spc, be_adt = predict_year(
            year, Rent, area, Tier, channel, channel_sub, design_type, province, city
         )
