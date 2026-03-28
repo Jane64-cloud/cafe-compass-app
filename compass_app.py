@@ -128,7 +128,7 @@ def predict_year(year, Rent, province, city, Tier, channel, channel_sub, design_
     input_df = pd.DataFrame([{
         'year': year,
         'Rent': Rent,
-        'area': area，
+        'area': area,
         'city_at_mean': city_at,
         'city_spc_mean': city_spc,
         'Tier': Tier,
