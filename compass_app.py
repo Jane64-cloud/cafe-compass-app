@@ -1,121 +1,240 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
-import pickle
-import streamlit as st
 import joblib
+import pickle
+import random
 
-#标题
-st.title("咖啡店罗盘")
-st.write("输入新店基本信息，系统将预测开业稳定后的日均交易单量（ADT）、年收入NetRevenue和年利润（SPC）.")
+# ---------- 页面配置 ----------
+st.set_page_config(page_title="咖啡店罗盘", layout="wide")
+st.title("☕ 咖啡店罗盘")
+st.markdown("输入门店信息和租赁条款，系统将预测未来多年的经营指标。")
 
-#load model
+# ---------- 加载模型 ----------
 @st.cache_resource
 def load_models():
-    adt_model = joblib.load('adt_predictor_rf.pkl')
-    spc_model = joblib.load('spc_predictor_rf.pkl')
-    net_model = joblib.load('net_predictor_rf.pkl')
-    return adt_model, spc_model, net_model
+    adt_model = joblib.load('adt_model.pkl')
+    net_model = joblib.load('net_model.pkl')
+    clf_model = joblib.load('spc_clf_model.pkl')
+    reg_model = joblib.load('spc_reg_model.pkl')
+    return adt_model, net_model, clf_model, reg_model
 
-#加载平均AT
+adt_model, net_model, clf_model, reg_model = load_models()
+
+# ---------- 加载城市数据 ----------
 @st.cache_data
-def load_avg_at():
-    return pd.read_csv('avg_at.csv')
+def load_city_data():
+    df = pd.read_csv('city_data.csv')  # 需要包含 province, city, Tier
+    return df
 
-adt_model, spc_model, net_model = load_models()
-avg_at_df = load_avg_at()
+city_df = load_city_data()
+all_provinces = city_df['province'].unique().tolist()
 
-#使用cat 避免产生无效选项
-categories = {
-    'province': ['安徽省','北京市','重庆市','福建省','甘肃省','广东省','广西自治区','贵州省','海南省','河北省','河南省','黑龙江省','湖北省','湖南省',
-                 '吉林省','江苏省','江西省','辽宁省','内蒙古自治','宁夏自治区','青海省','山东省','山西省','陕西省','上海市','四川省',
-                 '天津市','云南省','浙江省'],
-    'Tier': ['T1', 'T2', 'T3', 'T4', 'T5'],
-    'channel': ['keycity 大型综合商圈','市级商业中心区', '区域级商业区','社区型商业', '办公商圈（写字楼、园区）', '交通枢纽', '住宅', '旅游',
- '特殊商圈（学校、医院、博物馆）'],
-    'channel_sub': ['奢侈品商场', '购物中心', '百货', '超市/大卖场', '社区-商业中心', '奥莱', '服务社区的商区', '办公-餐饮街', '写字楼门店', 
-                     '各类办公园区', '企业总部', '企业总部-内部', '机场', '火车站', '高速公路服务区', '地铁', '独立性较强的景点，一般需购票进入', 
-                     '旅游特色商业街', '大学', '医院', '酒店', '街铺', '商业街','专业市场', '餐饮/酒吧街', '书店/图书馆等文化场所', '电影院', '剧院/音乐厅'],
-    'design_type': ['标准店', '高级标准店', '臻选店', '旗舰店']
-}
-with open('categories.pkl', 'rb') as f:
-    categories = pickle.load(f)
+# ---------- 加载城市目标编码映射 ----------
+@st.cache_data
+def load_city_encodings():
+    # 城市平均 SPC 映射
+    try:
+        with open('city_spc_mean.pkl', 'rb') as f:
+            city_spc_mean = pickle.load(f)
+        global_spc_mean = np.mean(list(city_spc_mean.values()))
+    except FileNotFoundError:
+        st.warning("未找到 city_spc_mean.pkl，将使用全局平均 SPC（可能影响预测精度）")
+        city_spc_mean = {}
+        global_spc_mean = 733936.59  # 可根据训练集整体均值设置
 
-#用户输入
-province = st.selectbox("省份/直辖市（按首字母排序）", categories['province'])
-tier = st.selectbox("城市等级", categories['Tier'])
-channel = st.selectbox("请选择商圈", categories['channel'])
-channel_sub = st.selectbox("请选择商区", categories['channel_sub'])
-design_type = st.selectbox("请选择门店类型", categories['design_type'])
-area = st.number_input("面积（平方米）", min_value=0.0, value=0.0)
-#租金输入方式，二选一
-rent_input_method = st.radio('租金输入方式', ['月租总金额', '每平米月租金额'])
+    # 城市平均 AT 映射
+    try:
+        with open('city_at_mean.pkl', 'rb') as f:
+            city_at_mean = pickle.load(f)
+        global_at_mean = np.mean(list(city_at_mean.values()))
+    except FileNotFoundError:
+        st.warning("未找到 city_at_mean.pkl，将使用全局平均 AT（可能影响预测精度）")
+        city_at_mean = {}
+        global_at_mean = 49.43
 
-if rent_input_method == "月租总金额":
-    rent = st.number_input("月租总金额（元）", min_value=0.0, value=0.0, step=10000.0)
-    if area > 0:
-        rent_per_square = rent / area
-        st.info(f"计算后每平米月租金额：{rent_per_square:.2f}元/平米/月")
+    return city_spc_mean, global_spc_mean, city_at_mean, global_at_mean
+
+city_spc_mean, global_spc_mean, city_at_mean, global_at_mean = load_city_encodings()
+
+# ---------- 固定选项 ----------
+CHANNELS = [
+    'keycity 大型综合商圈', '市级商业中心区', '区域级商业区', '社区型商业',
+    '办公商圈（写字楼、园区）', '交通枢纽', '住宅', '旅游',
+    '特殊商圈（学校、医院、博物馆）'
+]
+CHANNEL_SUBS = [
+    '奢侈品商场', '购物中心', '百货', '超市/大卖场', '社区-商业中心', '奥莱',
+    '服务社区的商区', '办公-餐饮街', '写字楼门店', '各类办公园区', '企业总部',
+    '企业总部-内部', '机场', '火车站', '高速公路服务区', '地铁',
+    '独立性较强的景点，一般需购票进入', '旅游特色商业街', '大学', '医院',
+    '酒店', '街铺', '商业街', '专业市场', '餐饮/酒吧街', '书店/图书馆等文化场所',
+    '电影院', '剧院/音乐厅'
+]
+DESIGN_TYPES = ['标准店', '高级标准店', '臻选店', '旗舰店']
+
+# ---------- 侧边栏输入 ----------
+with st.sidebar:
+    st.header("🏪 门店基本信息")
+
+    province = st.selectbox("省份", all_provinces)
+
+    cities_in_province = city_df[city_df['province'] == province]['city'].tolist()
+    city = st.selectbox("城市", cities_in_province)
+
+    # 自动填充城市等级
+    tier = city_df.loc[city_df['city'] == city, 'Tier'].values[0]
+    st.text_input("城市等级", value=tier, disabled=True)
+
+    channel = st.selectbox("商圈", CHANNELS)
+    channel_sub = st.selectbox("子商圈", CHANNEL_SUBS)
+    design_type = st.selectbox("门店类型", DESIGN_TYPES, index=0)
+    area = st.number_input("面积（平方米）", min_value=10.0, value=100.0, step=10.0)
+
+    st.divider()
+    st.header("📜 租赁条款")
+
+    lease_term = st.number_input("租期（年）", min_value=1, max_value=10, value=10, step=1)
+    first_year_rent = st.number_input("首年租金（元/年）", min_value=0, value=500000, step=50000)
+    rent_escalation = st.number_input("年租金递增比例（%）", min_value=0.0, value=3.0, step=0.5) / 100.0
+
+    # 投资成本估算（根据设计类型）
+    cost_per_sqm = {
+        '标准店': (7000, 9000),
+        '高级标准店': (9000, 12000),
+        '臻选店': (12000, 14000),
+        '旗舰店': (14000, 16000)
+    }
+    low, high = cost_per_sqm.get(design_type, (8000, 10000))
+    investment = area * random.uniform(low, high)
+    st.info(f"预估投资成本：{investment:,.0f} 元")
+
+# ---------- 生成未来年份和租金 ----------
+start_year = 2026
+years = [start_year + i for i in range(lease_term)]
+rents = [first_year_rent * (1 + rent_escalation) ** i for i in range(lease_term)]
+
+# ---------- 预测函数 ----------
+def predict_year(year, rent, province, city, tier, channel, channel_sub, design_type, area):
+    """
+    对单个年份预测 ADT、NetRevenue 和 SPC（两阶段）。
+    返回：adt, net, spc, break_even_adt
+    """
+    # 获取城市编码
+    city_spc = city_spc_mean.get(city, global_spc_mean)
+    city_at = city_at_mean.get(city, global_at_mean)
+
+    # 构造输入特征（列名必须与训练时一致！）
+    input_df = pd.DataFrame([{
+        'year': year,
+        'Rent': rent,
+        'province': province,
+        'city': city,
+        'Tier': tier,
+        'channel': channel,
+        'channel_sub': channel_sub,
+        'design_type': design_type,
+        'area': area,
+        'city_spc_mean': city_spc,
+        'city_at_mean': city_at
+    }])
+
+    # 确保分类特征为字符串类型（LightGBM 自动处理）
+    cat_cols = ['province', 'city', 'Tier', 'channel', 'channel_sub', 'design_type']
+    for col in cat_cols:
+        input_df[col] = input_df[col].astype('category')
+
+    # 预测 ADT 和 NetRevenue
+    adt = adt_model.predict(input_df)[0]
+    net = net_model.predict(input_df)[0]
+
+    # SPC 两阶段预测
+    prob_profit = clf_model.predict_proba(input_df)[:, 1][0]
+    if prob_profit >= 0.5:
+        pred_log = reg_model.predict(input_df)[0]
+        spc = np.exp(pred_log)  # 还原
     else:
-        st.warning("请先输入面积")
-        rent_per_square = 0.0
-else:
-    rent_per_square = st.number_input("每平米租金（元/平米/月）", min_value=0.0, value=0.0, step=100.0)
-    rent = area * rent_per_square
-    st.info(f"计算后月租金总额：{rent:.2f}元/月")
+        spc = -1  # 亏损，设为负值（可根据业务调整）
 
-#新增匹配平均AT
-avg_at_row = avg_at_df[(avg_at_df['channel'] == channel) & (avg_at_df['Tier'] == tier) & (avg_at_df['design_type'] == design_type) & 
-                        (avg_at_df['channel_sub'] == channel_sub) & (avg_at_df['province'] == province)]
-if not avg_at_row.empty:
-    avg_at = avg_at_row['avg_at'].values[0]
-else:
-    st.warning(f"未找到对应渠道{channel} 和城市等级{tier}的平均客单价，将默认使用40元。")
-    avg_at=40.0
-
+    # ---------- 盈亏平衡点 ADT 计算 ----------
+    # 随机生成运营成本率（25%~30%）和人工成本率（13%~15%）
+    materical_rate = random.uniform(0.25, 0.30)
+    labor_rate = random.uniform(0.18, 0.25)
+    utilities = random.uniform(0.03, 0.05)
+    depreciation = random.uniform(0.05, 0.08)
     
-#将输入转为 Dataframe
-input_data = pd.DataFrame({
-    'province':[province],
-    'Tier':[tier],
-    'channel':[channel],
-    'channel_sub':[channel_sub],
-    'design_type':[design_type],
-    'area':[area],
-    'FY24_rent':[rent],
-    'rent_per_square':[rent_per_square],
-    'avg_at':[avg_at]
-})
+    # 利润SPC = NetRevenue - 原料成本 - 人工成本 - 水电杂费 - 折旧 - 租金
+    # 令利润=0 => NetRevenue*(1-op_rate-labor_rate) - rent = 0
+    if (1 - op_rate - labor_rate - utilities - depreciation) > 0:
+        required_net = rent / (1 - op_rate - labor_rate - utilities - depreciation)
+        # 每单收入 = NetRevenue / ADT
+        if adt > 0:
+            avg_revenue_per_trans = net / adt
+            break_even_adt = (required_net / avg_revenue_per_trans).round(0)
+        else:
+            break_even_adt = np.nan
+    else:
+        break_even_adt = np.nan
 
-if st.button("预测"):
-    adt_pred = adt_model.predict(input_data)[0]
-    spc_pred = spc_model.predict(input_data)[0]
-    net_pred = net_model.predict(input_data)[0]
-    
-    st.success(f"预测日均交易单量(ADT)为:{adt_pred:.0f}笔")
-    st.success(f"预测年收入（NetRevenue）为：{net_pred:,.0f} 元")
-    st.success(f"预测年利润（SPC）为：{spc_pred:,.0f} 元")
+    return adt, net, spc, break_even_adt
 
-# 新增，投资回收期
-# 根据设计类型估计投资成本（元/平米）
+# ---------- 主按钮和结果展示 ----------
+if st.button("🔮 开始预测", type="primary"):
+    results = []
+    for year, rent in zip(years, rents):
+        adt, net, spc, be_adt = predict_year(
+            year, rent, province, city, tier, channel, channel_sub, design_type, area
+        )
+        results.append([year, rent, adt, net, spc, be_adt])
 
-cost_per_sqm = {
-    '标准店':(7000, 9000),
-    '高级标准店':(9000,12000),
-    '臻选店':(12000,14000),
-    '旗舰店':(14000,16000)
-}
-if design_type in cost_per_sqm:
-    low, high = cost_per_sqm[design_type]
-    investment = area * np.random.uniform(low, high)
-else:
-    investment = area * 8000
+    result_df = pd.DataFrame(results, columns=[
+        '年份', '年租金', 'ADT', '年收入', '年利润', '盈亏平衡ADT'
+    ])
 
-#预估投资成本+投资回收期
-spc_pred = spc_model.predict(input_data)[0]
-if spc_pred > 0:
-    payback_years = investment /spc_pred
-    st.info(f"预估投资成本：{investment:,.0f}元")
-    st.info(f"预估投资回收期:{payback_years:.1f}年")
-else:
-    st.error("预测利润为负，无法计算回收期。")
+    # 格式化数值
+    result_df = result_df.round({
+        'ADT': 0,
+        '年收入': 0,
+        '年利润': 0,
+        '盈亏平衡ADT': 0
+    })
+
+    st.subheader("📊 逐年预测结果")
+    # 使用 st.dataframe 并设置列格式（手机自适应）
+    st.dataframe(
+        result_df.style.format({
+            '年租金': '{:,.0f}',
+            'ADT': '{:,.0f}',
+            '年收入': '{:,.0f}',
+            '年利润': '{:,.0f}',
+            '盈亏平衡ADT': '{:,.0f}'
+        }),
+        use_container_width=True
+    )
+
+    # 投资回收期（累计利润回本）
+    cumulative = 0
+    payback_year = None
+    for _, row in result_df.iterrows():
+        cumulative += row['年利润']
+        if cumulative >= investment and payback_year is None:
+            payback_year = row['年份']
+            break
+    if payback_year:
+        st.success(f"💰 预计在 {payback_year} 年收回投资（累计利润 {cumulative:,.0f} 元）")
+    else:
+        st.warning("⚠️ 租期内累计利润未能覆盖投资成本")
+
+    # 绘制趋势图（手机友好）
+    st.subheader("📈 趋势图")
+    chart_data = result_df.set_index('年份')[['ADT', '年利润']]
+    st.line_chart(chart_data)
+
+    # 可选：导出 CSV
+    csv = result_df.to_csv(index=False).encode('utf-8')
+    st.download_button(
+        label="📥 下载预测结果 (CSV)",
+        data=csv,
+        file_name="cafe_forecast.csv",
+        mime="text/csv"
+    )
