@@ -183,7 +183,7 @@ if st.button("🔮 开始预测", type="primary"):
     results = []
     for year, rent in zip(years, rents):
         adt, net, spc, be_adt = predict_year(
-            year, Rent, province, city, Tier, channel, channel_sub, design_type, area
+            year, rent, province, city, Tier, channel, channel_sub, design_type, area
         )
         results.append([year, rent, adt, net, spc, be_adt])
 
