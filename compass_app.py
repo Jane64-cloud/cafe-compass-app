@@ -197,17 +197,21 @@ if st.button("🔮 开始预测", type="primary"):
         '年利润': 0,
         '盈亏平衡ADT': 0
     })
-
-    st.subheader("📊 逐年预测结果")
+    
+    def highlight_negative(val):
+        color = 'red' if val < 0 else 'black'
+        return f'color: {color}'
+    
     # 使用 st.dataframe 并设置列格式（手机自适应）
-    st.dataframe(
-        result_df.style.format({
+    styled_df = result_df.style.format({
             '年租金': '{:,.0f}',
             'ADT': '{:,.0f}',
             '年收入': '{:,.0f}',
             '年利润': '{:,.0f}',
             '盈亏平衡ADT': '{:,.0f}'
         }).applymap(highlight_negative, subset=['年利润'])
+    
+    st.subheader("📊 逐年预测结果")
     st.dataframe(styled_df, width='stretch', hide_index=True)
     
 
