@@ -149,31 +149,31 @@ def predict_year(year, Rent, area, Tier, channel, channel_sub, design_type, prov
 
     # ---------- 盈亏平衡点 ADT 计算 ----------
     # 随机生成运营成本率（25%~30%）和人工成本率（13%~15%）
-material_rate = random.uniform(0.25, 0.30)
-labor_rate = random.uniform(0.18, 0.25)
-utilities = random.uniform(0.03, 0.05)
-depreciation = random.uniform(0.05, 0.08)
-
-total_cost_rate = material_rate + labor_rate + utilities + depreciation
-
-spc = net - Rent - net * total_cost_rate
+    material_rate = random.uniform(0.25, 0.30)
+    labor_rate = random.uniform(0.18, 0.25)
+    utilities = random.uniform(0.03, 0.05)
+    depreciation = random.uniform(0.05, 0.08)
     
-if (1 - total_cost_rate) > 0 and adt > 0:
-    required_net = Rent / (1 - total_cost_rate)
-    avg_revenue_per_trans = net / adt
-    break_even_adt = (required_net / avg_revenue_per_trans).round(0)
-else:
-    break_even_adt = np.nan
-
-# 成本率
-cost_rates = {
-    '材料成本率': material_rate,
-    '人工成本率': labor_rate,
-    '水电杂费率': utilities,
-    '折旧率':depreciation
-}
-
-return adt, net, spc, break_even_adt, cost_rates
+    total_cost_rate = material_rate + labor_rate + utilities + depreciation
+    
+    spc = net - Rent - net * total_cost_rate
+        
+    if (1 - total_cost_rate) > 0 and adt > 0:
+        required_net = Rent / (1 - total_cost_rate)
+        avg_revenue_per_trans = net / adt
+        break_even_adt = (required_net / avg_revenue_per_trans).round(0)
+    else:
+        break_even_adt = np.nan
+    
+    # 成本率
+    cost_rates = {
+        '材料成本率': material_rate,
+        '人工成本率': labor_rate,
+        '水电杂费率': utilities,
+        '折旧率':depreciation
+    }
+    
+    return adt, net, spc, break_even_adt, cost_rates
 
 # 主按钮和结果展示 
 if st.button("🔮 开始预测", type="primary"):
@@ -230,17 +230,6 @@ if st.button("🔮 开始预测", type="primary"):
     st.subheader("📈 趋势图")
     chart_data = result_df.set_index('年份')[['ADT', '年利润']]
     st.line_chart(chart_data)
-
-    st.subheader("💰 成本构成")
-    cost_breakdown = pd.DataFrame({
-        '年份': result_df['年份'],
-        '租金': result_df['年租金'],
-        '材料成本': result_df['年收入'] * material_rate,  # 注意 material_rate 是随机值，这里需在循环中保存
-        '人工成本': result_df['年收入'] * labor_rate,
-        '水电杂费': result_df['年收入'] * utilities,
-        '折旧': result_df['年收入'] * depreciation
-    }).round(0)
-    st.dataframe(cost_breakdown.style.format('{:.0f}'), width='stretch', hide_index=True)
     
     # 可选：导出 CSV
     csv = result_df.to_csv(index=False).encode('utf-8')
