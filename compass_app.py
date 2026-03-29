@@ -158,22 +158,22 @@ total_cost_rate = material_rate + labor_rate + utilities + depreciation
 
 spc = net - Rent - net * total_cost_rate
     
-    if (1 - total_cost_rate) > 0 and adt > 0:
-        required_net = Rent / (1 - total_cost_rate)
-        avg_revenue_per_trans = net / adt
-        break_even_adt = (required_net / avg_revenue_per_trans).round(0)
-    else:
-        break_even_adt = np.nan
+if (1 - total_cost_rate) > 0 and adt > 0:
+    required_net = Rent / (1 - total_cost_rate)
+    avg_revenue_per_trans = net / adt
+    break_even_adt = (required_net / avg_revenue_per_trans).round(0)
+else:
+    break_even_adt = np.nan
 
-    # 成本率
-    cost_rates = {
-        '材料成本率': material_rate,
-        '人工成本率': labor_rate,
-        '水电杂费率': utilities,
-        '折旧率':depreciation
-    }
-    
-    return adt, net, spc, break_even_adt, cost_rates
+# 成本率
+cost_rates = {
+    '材料成本率': material_rate,
+    '人工成本率': labor_rate,
+    '水电杂费率': utilities,
+    '折旧率':depreciation
+}
+
+return adt, net, spc, break_even_adt, cost_rates
 
 # 主按钮和结果展示 
 if st.button("🔮 开始预测", type="primary"):
