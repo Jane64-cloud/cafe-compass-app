@@ -153,10 +153,10 @@ def predict_year(year, Rent, area, Tier, channel, channel_sub, design_type, prov
     labor_rate = random.uniform(0.18, 0.25)
     utilities = random.uniform(0.03, 0.05)
     depreciation = random.uniform(0.05, 0.08)
-
-    spc = net - Rent - net * total_cost_rate
     
     total_cost_rate = material_rate + labor_rate + utilities + depreciation
+
+    spc = net - Rent - net * total_cost_rate
     
     if (1 - total_cost_rate) > 0 and adt > 0:
         required_net = Rent / (1 - total_cost_rate)
