@@ -180,10 +180,10 @@ if st.button("🔮 开始预测", type="primary"):
     results = []
     cost_rates_list = [] #储存每年的成本率
     for year, Rent in zip(years, rents):
-        adt, net, spc, be_adt = predict_year(
+        adt, net, spc, break_even_adt = predict_year(
             year, Rent, area, Tier, channel, channel_sub, design_type, province, city
         )
-        results.append([year, Rent, adt, net, spc, be_adt])
+        results.append([year, Rent, adt, net, spc, break_even_adt])
         cost_rates_list.append(cost_rates)
 
     result_df = pd.DataFrame(results, columns=[
@@ -267,7 +267,7 @@ if st.button("🔮 开始预测", type="primary"):
         '水电杂费': result_df['年收入'] * utilities,
         '折旧': result_df['年收入'] * depreciation
     }).round(0)
-    st.dataframe(cost_breakdown.style.format('{:.0f}'), width='stretch')
+    st.dataframe(cost_breakdown.style.format('{:.0f}'), width='stretch', hide_index=True)
     
     # 可选：导出 CSV
     csv = result_df.to_csv(index=False).encode('utf-8')
