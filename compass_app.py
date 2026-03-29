@@ -228,7 +228,7 @@ if st.button("🔮 开始预测", type="primary"):
 
     # 绘制趋势图（手机友好）
     st.subheader("📈 趋势图")
-    chart_data = result_df.set_index('年份')[['ADT', '年利润']]
+    chart_data = result_df.set_index('年份')[['年收入', '年利润']]
     st.line_chart(chart_data)
     
     # 可选：导出 CSV
