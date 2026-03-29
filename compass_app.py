@@ -207,10 +207,8 @@ if st.button("🔮 开始预测", type="primary"):
             '年收入': '{:,.0f}',
             '年利润': '{:,.0f}',
             '盈亏平衡ADT': '{:,.0f}'
-        }),
-        width='stretch',
-        hide_index=True
-    )
+        }).applymap(highlight_negative, subset=['年利润'])
+    st.dataframe(styled_df, width='stretch', hide_index=True)
     
 
     # 投资回收期（累计利润回本）
