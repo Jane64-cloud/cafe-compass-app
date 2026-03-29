@@ -180,7 +180,7 @@ if st.button("🔮 开始预测", type="primary"):
     results = []
     cost_rates_list = [] #储存每年的成本率
     for year, Rent in zip(years, rents):
-        adt, net, spc, break_even_adt = predict_year(
+        adt, net, spc, break_even_adt, cost_rates = predict_year(
             year, Rent, area, Tier, channel, channel_sub, design_type, province, city
         )
         results.append([year, Rent, adt, net, spc, break_even_adt])
@@ -211,33 +211,6 @@ if st.button("🔮 开始预测", type="primary"):
         width='stretch',
         hide_index=True
     )
-
-    #成本构成
-    st.subheader("💰 成本构成明细（每年随机估算）")
-    cost_df = pd.DataFrame(cost_rates_list)
-    cost_df.insert(0, '年份', result_df['年份'])
-
-    #将成本率转换为金额
-    cost_amount_df = cost_df.copy()
-    for col in ['材料成本率', '人工成本率', '水电杂费率', '折旧率']:
-        cost_amount_df[col] = (cost_amount_df[col] * result_df['年收入']).round(0)
-    cost_amount_df = cost_amount_df.rename(columns={
-        '材料成本率': '材料成本',
-        '人工成本率': '人工成本',
-        '水电杂费率': '水电杂费',
-        '折旧率': '折旧'
-    })
-    st.dataframe(
-        cost_amount_df.style.format({
-            '材料成本': '{:,.0f}',
-            '人工成本': '{:,.0f}',
-            '水电杂费': '{:,.0f}',
-            '折旧': '{:,.0f}'
-        }),
-        width='stretch',
-        hide_index=True
-    )
-    st.caption("注：成本率每年随机生成，反映成本估算的不确定性。实际成本请参考企业财务数据。")
     
 
     # 投资回收期（累计利润回本）
