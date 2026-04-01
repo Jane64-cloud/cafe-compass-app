@@ -149,10 +149,10 @@ def predict_year(year, Rent, area, Tier, channel, channel_sub, design_type, prov
 
     # ---------- 盈亏平衡点 ADT 计算 ----------
     # 随机生成运营成本率（25%~30%）和人工成本率（13%~15%）
-    material_rate = random.uniform(0.25, 0.35)
-    labor_rate = random.uniform(0.20, 0.30)
-    utilities = random.uniform(0.03, 0.06)
-    depreciation = random.uniform(0.05, 0.08)
+    material_rate = random.uniform(0.30, 0.35)
+    labor_rate = random.uniform(0.25, 0.30)
+    utilities = random.uniform(0.05, 0.08)
+    depreciation = random.uniform(0.05, 0.10)
     
     total_cost_rate = material_rate + labor_rate + utilities + depreciation
     
@@ -214,7 +214,7 @@ if st.button("🔮 开始预测", type="primary"):
     st.subheader("📊 逐年预测结果")
     st.dataframe(styled_df, width='stretch', hide_index=True)
 
-    st.subheader("💰 成本构成明细（每年随机估算）")
+    st.subheader("💰 运营成本构成明细（范围内每年随机估算）")
     cost_df = pd.DataFrame(cost_rates_list)
     cost_df.insert(0, '年份', result_df['年份'])
     cost_amount_df = cost_df.copy()
