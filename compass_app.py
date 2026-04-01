@@ -248,6 +248,11 @@ if st.button("🔮 开始预测", type="primary"):
     else:
         st.warning("⚠️ 租期内累计利润未能覆盖投资成本")
 
+    #计算ROI
+    total_profit = result_df['年利润'].sum()
+    roi = (total_profit - investment) / investment
+    st.metric("投资回报率 (ROI)", f"{roi:.1%}")
+
     # 绘制趋势图（手机友好）
     st.subheader("📈 趋势图")
     chart_data = result_df.set_index('年份')[['年收入', '年利润']]
