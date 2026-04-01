@@ -149,10 +149,10 @@ def predict_year(year, Rent, area, Tier, channel, channel_sub, design_type, prov
 
     # ---------- 盈亏平衡点 ADT 计算 ----------
     # 随机生成运营成本率（25%~30%）和人工成本率（13%~15%）
-    material_rate = random.uniform(0.30, 0.35)
-    labor_rate = random.uniform(0.25, 0.30)
-    utilities = random.uniform(0.05, 0.08)
-    depreciation = random.uniform(0.05, 0.10)
+    material_rate = random.uniform(0.25, 0.30)
+    labor_rate = random.uniform(0.18, 0.25)
+    utilities = random.uniform(0.03, 0.05)
+    depreciation = random.uniform(0.05, 0.08)
     
     total_cost_rate = material_rate + labor_rate + utilities + depreciation
     
@@ -160,7 +160,7 @@ def predict_year(year, Rent, area, Tier, channel, channel_sub, design_type, prov
         
     if (1 - total_cost_rate) > 0 and adt > 0:
         required_net = Rent / (1 - total_cost_rate)
-        avg_revenue_per_trans = net / adt / 366
+        avg_revenue_per_trans = net / adt / 365
         break_even_adt = (required_net / avg_revenue_per_trans).round(0)
     else:
         break_even_adt = np.nan
