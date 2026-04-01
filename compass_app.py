@@ -160,7 +160,7 @@ def predict_year(year, Rent, area, Tier, channel, channel_sub, design_type, prov
         
     if (1 - total_cost_rate) > 0 and adt > 0:
         required_net = Rent / (1 - total_cost_rate)
-        avg_revenue_per_trans = net / adt / 365
+        avg_revenue_per_trans = net / adt /365
         break_even_adt = (required_net / avg_revenue_per_trans).round(0)
     else:
         break_even_adt = np.nan
@@ -248,10 +248,6 @@ if st.button("🔮 开始预测", type="primary"):
     else:
         st.warning("⚠️ 租期内累计利润未能覆盖投资成本")
 
-    #计算ROI
-    total_profit = result_df['年利润'].sum()
-    roi = (total_profit - investment) / investment
-    st.metric("投资回报率 (ROI)", f"{roi:.1%}")
 
     # 绘制趋势图（手机友好）
     st.subheader("📈 趋势图")
