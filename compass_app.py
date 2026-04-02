@@ -198,9 +198,11 @@ if st.button("🔮 开始预测", type="primary"):
         '盈亏平衡ADT': 0
     })
     
-    def highlight_negative(val):
-        color = 'red' if val < 0 else 'black'
-        return f'color: {color}'
+    def highlight_negative_column(col):
+        if col.name == '年利润':
+            return ['color: red' if v < 0 else 'color: black' for v in col]
+        else:
+            return ['color:black'] * len(col)
     
     # 使用 st.dataframe 并设置列格式（手机自适应）
     styled_df = result_df.style.format({
@@ -209,7 +211,7 @@ if st.button("🔮 开始预测", type="primary"):
             '年收入': '{:,.0f}',
             '年利润': '{:,.0f}',
             '盈亏平衡ADT': '{:,.0f}'
-        }).applymap(highlight_negative, subset=['年利润'])
+        }).apply(highlight_negative)
     
     st.subheader("📊 逐年预测结果")
     st.dataframe(styled_df, width='stretch', hide_index=True)
