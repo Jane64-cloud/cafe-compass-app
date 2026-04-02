@@ -209,7 +209,7 @@ if st.button("🔮 开始预测", type="primary"):
             '年收入': '{:,.0f}',
             '年利润': '{:,.0f}',
             '盈亏平衡ADT': '{:,.0f}'
-        }).applymap(highlight_negative, subset=['年利润'])
+        }).apply(highlight_negative, subset=['年利润'])
     
     st.subheader("📊 逐年预测结果")
     st.dataframe(styled_df, width='stretch', hide_index=True)
