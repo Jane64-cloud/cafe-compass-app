@@ -40,7 +40,7 @@ def load_city_encodings():
     except FileNotFoundError:
         st.warning("未找到 city_spc_mean.pkl，将使用全局平均 SPC（可能影响预测精度）")
         city_spc_mean = {}
-        global_spc_mean = 49.43
+        global_spc_mean = 793816.53
 
     # 城市平均 AT 映射
     try:
