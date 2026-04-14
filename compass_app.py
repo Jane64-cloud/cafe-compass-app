@@ -223,7 +223,7 @@ if st.button("🔮 开始预测", type="primary"):
             '盈亏平衡ADT': '{:,.0f}'
         }).apply(highlight_negative_column)
     
-    st.subheader("📊 逐年预测结果")
+    st.subheader("📊 开业第一年预估ADT")
     st.dataframe(styled_df, width='stretch', hide_index=True)
 
     #新增：添加开店建议
