@@ -148,11 +148,11 @@ def predict_year(year, Rent, area, Tier, channel, channel_sub, design_type, prov
     net = net_model.predict(input_df)[0]
 
     # ---------- 盈亏平衡点 ADT 计算 ----------
-    # 随机生成运营成本率（25%~30%）和人工成本率（13%~15%）
-    material_rate = random.uniform(0.28, 0.32)
-    labor_rate = random.uniform(0.20, 0.25)
-    utilities = random.uniform(0.04, 0.06)
-    depreciation = random.uniform(0.05, 0.08)
+    # 瑞幸固定成本
+    material_rate = 42%
+    labor_rate = 15%
+    utilities = 10%
+    depreciation = 5%
     
     total_cost_rate = material_rate + labor_rate + utilities + depreciation
     
