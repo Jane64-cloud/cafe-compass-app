@@ -95,7 +95,7 @@ with st.sidebar:
 
     lease_term = st.number_input("租期（年）", min_value=1, max_value=20, value=10, step=1)
     first_year_rent = st.number_input("首年租金（元/年）", min_value=0, value=0, step=10000)
-    rent_escalation = st.number_input("年租金递增比例（%）", min_value=0.0, value=0.0, step=0.5) / 100.0
+    # rent_escalation = st.number_input("年租金递增比例（%）", min_value=0.0, value=0.0, step=0.5) / 100.0
 
     # 投资成本估算（根据设计类型）
     cost_per_sqm = {
@@ -223,7 +223,7 @@ if st.button("🔮 开始预测", type="primary"):
             '盈亏平衡ADT': '{:,.0f}'
         }).apply(highlight_negative_column)
     
-    st.subheader("📊 开业第一年预估ADT")
+    st.subheader("📊 开业首年预估ADT")
     st.dataframe(styled_df, width='stretch', hide_index=True)
 
     #新增：添加开店建议
