@@ -91,7 +91,7 @@ with st.sidebar:
     area = st.number_input("面积（平方米）", min_value=10.0, value=100.0, step=10.0)
 
     st.divider()
-    st.header("📜 租赁条款")
+    st.header("📜 租金条件")
 
     lease_term = st.number_input("租期（年）", min_value=1, max_value=20, value=10, step=1)
     first_year_rent = st.number_input("首年租金（元/年）", min_value=0, value=0, step=10000)
@@ -144,7 +144,7 @@ def predict_year(year, Rent, area, Tier, channel, channel_sub, design_type, prov
         input_df[col] = input_df[col].astype('category')
 
     # 预测 ADT 和 NetRevenue
-    adt = adt_model.predict(input_df)[0]
+    adt = adt_model.predict(input_df)[0]*1.6
     net = net_model.predict(input_df)[0]
 
     # ---------- 盈亏平衡点 ADT 计算 ----------
@@ -242,12 +242,12 @@ if st.button("🔮 开始预测", type="primary"):
         suggestion = "❌ 不建议开店"
         color = "red"
         
-    # st.subheader("📊 开店决策建议（基于首年预测）")
-    # st.markdown(f"<h3 style='color:{color}'>{suggestion}</h3>", unsafe_allow_html=True)
-    # col1, col2, col3 = st.columns(3)
-    # col1.metric("预估日均杯数", f"{adt:.0f}")
-    # col2.metric("盈亏平衡杯数", f"{break_even:.0f}")
-    # col3.metric("建议最低杯数 (Hurdle)", f"{hurdle:.0f}")
+    st.subheader("📊 开店决策建议（基于首年预测）")
+    st.markdown(f"<h3 style='color:{color}'>{suggestion}</h3>", unsafe_allow_html=True)
+    col1, col2, col3 = st.columns(3)
+    col1.metric("预估日均杯数", f"{adt:.0f}")
+    col2.metric("盈亏平衡杯数", f"{break_even:.0f}")
+    col3.metric("建议最低杯数 (Hurdle)", f"{hurdle:.0f}")
 
     # st.subheader("💰 运营成本构成明细（范围内每年随机估算）")
     # cost_df = pd.DataFrame(cost_rates_list)
