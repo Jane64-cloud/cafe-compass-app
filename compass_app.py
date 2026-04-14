@@ -172,7 +172,7 @@ def predict_year(year, Rent, area, Tier, channel, channel_sub, design_type, prov
         return base
 
     multiplier = get_hurdle_multiplier(Tier, design_type)
-    hurdle_adt = break_even_adt * multiplier if not np.isnan(break_even_adt) else np.nan
+    hurdle_adt = int(break_even_adt * multiplier) if not np.isnan(break_even_adt) else np.nan
 
     # 成本率
     cost_rates = {
