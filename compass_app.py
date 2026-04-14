@@ -173,11 +173,7 @@ def predict_year(year, Rent, area, Tier, channel, channel_sub, design_type, prov
 
     multiplier = get_hurdle_multiplier(Tier, design_type)
     hurdle_adt = break_even_adt * multiplier if not np.isnan(break_even_adt) else np.nan
-    
-    # 修改返回值，增加 hurdle_adt
-    return adt, net, spc, break_even_adt, hurdle_adt, cost_rates
 
-    
     # 成本率
     cost_rates = {
         '材料成本率': material_rate,
@@ -186,7 +182,8 @@ def predict_year(year, Rent, area, Tier, channel, channel_sub, design_type, prov
         '折旧率':depreciation
     }
     
-    return adt, net, spc, break_even_adt, cost_rates
+    # 修改返回值，增加 hurdle_adt
+    return adt, net, spc, break_even_adt, hurdle_adt, cost_rates
 
 # 主按钮和结果展示 
 if st.button("🔮 开始预测", type="primary"):
