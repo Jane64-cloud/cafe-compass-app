@@ -149,10 +149,10 @@ def predict_year(year, Rent, area, Tier, channel, channel_sub, design_type, prov
 
     # ---------- 盈亏平衡点 ADT 计算 ----------
     # 瑞幸固定成本
-    material_rate = 42%
-    labor_rate = 15%
-    utilities = 10%
-    depreciation = 5%
+    material_rate = 0.42
+    labor_rate = 0.15
+    utilities = 0.1
+    depreciation = 0.05
     
     total_cost_rate = material_rate + labor_rate + utilities + depreciation
     
