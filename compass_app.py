@@ -50,7 +50,7 @@ def load_city_encodings():
     except FileNotFoundError:
         st.warning("未找到 city_at_mean.pkl，将使用全局平均 AT（可能影响预测精度）")
         city_at_mean = {}
-        global_at_mean = 49.43
+        global_at_mean = 49.43*0.4
         
     return city_spc_mean, global_spc_mean, city_at_mean, global_at_mean
 
@@ -110,8 +110,8 @@ with st.sidebar:
 
 # ---------- 生成未来年份和租金 ----------
 start_year = 2026
-years = [start_year + i for i in range(lease_term)]
-rents = [first_year_rent * (1 + rent_escalation) ** i for i in range(lease_term)]
+years = [start_year]
+rents = [first_year_rent]
 
 # ---------- 预测函数 ----------
 def predict_year(year, Rent, area, Tier, channel, channel_sub, design_type, province, city):
@@ -121,7 +121,7 @@ def predict_year(year, Rent, area, Tier, channel, channel_sub, design_type, prov
     """
     # 获取城市编码
     city_spc = city_spc_mean.get(city, global_spc_mean)
-    city_at = city_at_mean.get(city, global_at_mean)
+    city_at = city_at_mean.get(city, global_at_mean)*0.4
 
     # 构造输入特征
     input_df = pd.DataFrame([{
@@ -149,9 +149,9 @@ def predict_year(year, Rent, area, Tier, channel, channel_sub, design_type, prov
 
     # ---------- 盈亏平衡点 ADT 计算 ----------
     # 随机生成运营成本率（25%~30%）和人工成本率（13%~15%）
-    material_rate = random.uniform(0.25, 0.30)
-    labor_rate = random.uniform(0.18, 0.25)
-    utilities = random.uniform(0.03, 0.05)
+    material_rate = random.uniform(0.28, 0.32)
+    labor_rate = random.uniform(0.20, 0.25)
+    utilities = random.uniform(0.04, 0.06)
     depreciation = random.uniform(0.05, 0.08)
     
     total_cost_rate = material_rate + labor_rate + utilities + depreciation
@@ -164,6 +164,19 @@ def predict_year(year, Rent, area, Tier, channel, channel_sub, design_type, prov
         break_even_adt = (required_net / avg_revenue_per_trans).round(0)
     else:
         break_even_adt = np.nan
+     # ---------- 新增：计算Hurdle ADT ----------
+    def get_hurdle_multiplier(Tier, design_type):
+    base = {'T1': 1.15, 'T2': 1.10, 'T3': 1.08, 'T4': 1.08, 'T5': 1.08}.get(Tier, 1.08)
+    if design_type in ['高级标准店', '臻选店', '旗舰店']:
+            base += 0.10
+    return base
+
+    multiplier = get_hurdle_multiplier(Tier, design_type)
+    hurdle_adt = break_even_adt * multiplier if not np.isnan(break_even_adt) else np.nan
+    
+    # 修改返回值，增加 hurdle_adt
+    return adt, net, spc, break_even_adt, hurdle_adt, cost_rates
+
     
     # 成本率
     cost_rates = {
@@ -180,14 +193,14 @@ if st.button("🔮 开始预测", type="primary"):
     results = []
     cost_rates_list = [] #储存每年的成本率
     for year, Rent in zip(years, rents):
-        adt, net, spc, break_even_adt, cost_rates = predict_year(
+        adt, net, spc, break_even_adt, hurdle_adt, cost_rates = predict_year(
             year, Rent, area, Tier, channel, channel_sub, design_type, province, city
         )
-        results.append([year, Rent, adt, net, spc, break_even_adt])
+        results.append([year, Rent, adt, net, spc, break_even_adt, hurdle_adt])
         cost_rates_list.append(cost_rates)
 
     result_df = pd.DataFrame(results, columns=[
-        '年份', '年租金', 'ADT', '年收入', '年利润', '盈亏平衡ADT'
+        '年份', '年租金', 'ADT', '年收入', '年利润', '盈亏平衡ADT', 'HurdleADT'
     ])
 
     # 格式化数值
@@ -216,25 +229,48 @@ if st.button("🔮 开始预测", type="primary"):
     st.subheader("📊 逐年预测结果")
     st.dataframe(styled_df, width='stretch', hide_index=True)
 
-    st.subheader("💰 运营成本构成明细（范围内每年随机估算）")
-    cost_df = pd.DataFrame(cost_rates_list)
-    cost_df.insert(0, '年份', result_df['年份'])
-    cost_amount_df = cost_df.copy()
-    for col in ['材料成本率', '人工成本率', '水电杂费率', '折旧率']:
-        cost_amount_df[col] = (cost_amount_df[col] * result_df['年收入']).round(0)
-    cost_amount_df = cost_amount_df.rename(columns={
-        '材料成本率': '材料成本',
-        '人工成本率': '人工成本',
-        '水电杂费率': '水电杂费',
-        '折旧率': '折旧'
-    })
-    st.dataframe(cost_amount_df.style.format({
-        '材料成本': '{:,.0f}',
-        '人工成本': '{:,.0f}',
-        '水电杂费': '{:,.0f}',
-        '折旧': '{:,.0f}'
-    }), width='stretch', hide_index=True)
-    st.caption("注：成本率每年随机生成，反映成本估算的不确定性。实际成本请参考企业财务数据。")
+    #新增：添加开店建议
+    first_year = result_df.iloc[0]
+    adt = first_year['ADT']
+    break_even = first_year['盈亏平衡ADT']
+    hurdle = first_year['HurdleADT']
+
+    if adt >= hurdle:
+        suggestion = "✅ 建议开店"
+        color = "green"
+    elif adt >= break_even:
+        suggestion = "⚠️ 需谨慎评估"
+        color = "orange"
+    else:
+        suggestion = "❌ 不建议开店"
+        color = "red"
+        
+    # st.subheader("📊 开店决策建议（基于首年预测）")
+    # st.markdown(f"<h3 style='color:{color}'>{suggestion}</h3>", unsafe_allow_html=True)
+    # col1, col2, col3 = st.columns(3)
+    # col1.metric("预估日均杯数", f"{adt:.0f}")
+    # col2.metric("盈亏平衡杯数", f"{break_even:.0f}")
+    # col3.metric("建议最低杯数 (Hurdle)", f"{hurdle:.0f}")
+
+    # st.subheader("💰 运营成本构成明细（范围内每年随机估算）")
+    # cost_df = pd.DataFrame(cost_rates_list)
+    # cost_df.insert(0, '年份', result_df['年份'])
+    # cost_amount_df = cost_df.copy()
+    # for col in ['材料成本率', '人工成本率', '水电杂费率', '折旧率']:
+    #     cost_amount_df[col] = (cost_amount_df[col] * result_df['年收入']).round(0)
+    # cost_amount_df = cost_amount_df.rename(columns={
+    #     '材料成本率': '材料成本',
+    #     '人工成本率': '人工成本',
+    #     '水电杂费率': '水电杂费',
+    #     '折旧率': '折旧'
+    # })
+    # st.dataframe(cost_amount_df.style.format({
+    #     '材料成本': '{:,.0f}',
+    #     '人工成本': '{:,.0f}',
+    #     '水电杂费': '{:,.0f}',
+    #     '折旧': '{:,.0f}'
+    # }), width='stretch', hide_index=True)
+    # st.caption("注：成本率每年随机生成，反映成本估算的不确定性。实际成本请参考企业财务数据。")
     
 
     # 投资回收期（累计利润回本）
@@ -252,9 +288,9 @@ if st.button("🔮 开始预测", type="primary"):
 
 
     # 绘制趋势图（手机友好）
-    st.subheader("📈 趋势图")
-    chart_data = result_df.set_index('年份')[['年收入', '年利润']]
-    st.line_chart(chart_data)
+    # st.subheader("📈 趋势图")
+    # chart_data = result_df.set_index('年份')[['年收入', '年利润']]
+    # st.line_chart(chart_data)
     
     # 导出 CSV
     csv = result_df.to_csv(index=False).encode('utf-8')
