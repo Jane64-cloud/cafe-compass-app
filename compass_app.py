@@ -166,10 +166,10 @@ def predict_year(year, Rent, area, Tier, channel, channel_sub, design_type, prov
         break_even_adt = np.nan
      # ---------- 新增：计算Hurdle ADT ----------
     def get_hurdle_multiplier(Tier, design_type):
-    base = {'T1': 1.15, 'T2': 1.10, 'T3': 1.08, 'T4': 1.08, 'T5': 1.08}.get(Tier, 1.08)
-    if design_type in ['高级标准店', '臻选店', '旗舰店']:
+        base = {'T1': 1.15, 'T2': 1.10, 'T3': 1.08, 'T4': 1.08, 'T5': 1.08}.get(Tier, 1.08)
+        if design_type in ['高级标准店', '臻选店', '旗舰店']:
             base += 0.10
-    return base
+        return base
 
     multiplier = get_hurdle_multiplier(Tier, design_type)
     hurdle_adt = break_even_adt * multiplier if not np.isnan(break_even_adt) else np.nan
