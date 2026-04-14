@@ -270,18 +270,18 @@ if st.button("🔮 开始预测", type="primary"):
     # st.caption("注：成本率每年随机生成，反映成本估算的不确定性。实际成本请参考企业财务数据。")
     
 
-    # 投资回收期（累计利润回本）
-    cumulative = 0
-    payback_year = None
-    for _, row in result_df.iterrows():
-        cumulative += row['年利润']
-        if cumulative >= investment and payback_year is None:
-            payback_year = row['年份']
-            break
-    if payback_year:
-        st.success(f"💰 预计在 {payback_year} 年收回投资（累计利润 {cumulative:,.0f} 元）")
-    else:
-        st.warning("⚠️ 租期内累计利润未能覆盖投资成本")
+    # # 投资回收期（累计利润回本）
+    # cumulative = 0
+    # payback_year = None
+    # for _, row in result_df.iterrows():
+    #     cumulative += row['年利润']
+    #     if cumulative >= investment and payback_year is None:
+    #         payback_year = row['年份']
+    #         break
+    # if payback_year:
+    #     st.success(f"💰 预计在 {payback_year} 年收回投资（累计利润 {cumulative:,.0f} 元）")
+    # else:
+    #     st.warning("⚠️ 租期内累计利润未能覆盖投资成本")
 
 
     # 绘制趋势图（手机友好）
