@@ -8,7 +8,7 @@ import random
 # ---------- 页面配置 ----------
 st.set_page_config(page_title="咖啡店罗盘", layout="wide")
 st.title("☕ 咖啡店罗盘")
-st.markdown("输入门店信息和租赁条款，系统将预测未来多年的经营指标。")
+st.markdown("输入门店信息和首年租金总额，系统将预估首年每日单量和开店意见。")
 
 # ---------- 加载模型 ----------
 @st.cache_resource
@@ -197,7 +197,7 @@ if st.button("🔮 开始预测", type="primary"):
         cost_rates_list.append(cost_rates)
 
     result_df = pd.DataFrame(results, columns=[
-        '年份', '年租金', 'ADT', '年收入', '年利润', '盈亏平衡ADT', 'HurdleADT'
+        '年份', '年租金', '日均单量（ADT）', '年收入', '年利润', '盈亏平衡日均单量（ADT）', 'Hurdle日均单量（ADT）'
     ])
 
     # 格式化数值
@@ -223,7 +223,7 @@ if st.button("🔮 开始预测", type="primary"):
             '盈亏平衡ADT': '{:,.0f}'
         }).apply(highlight_negative_column)
     
-    st.subheader("📊 开业首年预估ADT")
+    st.subheader("📊 开业首年预估日均单量（ADT）")
     st.dataframe(styled_df, width='stretch', hide_index=True)
 
     #新增：添加开店建议
@@ -245,9 +245,9 @@ if st.button("🔮 开始预测", type="primary"):
     st.subheader("📊 开店决策建议（基于首年预测）")
     st.markdown(f"<h3 style='color:{color}'>{suggestion}</h3>", unsafe_allow_html=True)
     col1, col2, col3 = st.columns(3)
-    col1.metric("预估日均杯数", f"{adt:.0f}")
-    col2.metric("盈亏平衡杯数", f"{break_even:.0f}")
-    col3.metric("建议最低杯数 (Hurdle)", f"{hurdle:.0f}")
+    col1.metric("预估日均单量", f"{adt:.0f}")
+    col2.metric("盈亏平衡日均单量", f"{break_even:.0f}")
+    col3.metric("建议最低日均单量 (Hurdle)", f"{hurdle:.0f}")
 
     # st.subheader("💰 运营成本构成明细（范围内每年随机估算）")
     # cost_df = pd.DataFrame(cost_rates_list)
