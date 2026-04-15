@@ -86,10 +86,10 @@ with st.sidebar:
     area = st.number_input("面积（平方米）", min_value=10.0, value=100.0, step=10.0)
 
     st.divider()
-    st.header("📜 租赁条款")
-    lease_term = st.number_input("租期（年）", min_value=1, max_value=20, value=10, step=1)
-    first_year_rent = st.number_input("首年租金（元/年）", min_value=0, value=0, step=10000)
-    rent_escalation = st.number_input("年租金递增比例（%）", min_value=0.0, value=0.0, step=0.5) / 100.0
+    st.header("📜 租金")
+    first_year_rent = st.number_input("租金（元/年）", min_value=0, value=0, step=10000)
+    lease_term = 1
+    rent_escalation = 0.0
 
 # ---------- 瑞幸店型映射到星巴克模型店型 ----------
 def map_to_starbucks_type(ruixing_type):
@@ -103,8 +103,8 @@ def map_to_starbucks_type(ruixing_type):
 
 # ---------- 生成未来年份和租金 ----------
 start_year = 2026
-years = [start_year + i for i in range(lease_term)]
-rents = [first_year_rent * (1 + rent_escalation) ** i for i in range(lease_term)]
+years = [start_year]
+rents = [first_year_rent]
 
 # ---------- 辅助函数：计算Hurdle倍数 ----------
 def get_hurdle_multiplier(Tier, ruixing_type):
@@ -179,8 +179,8 @@ if st.button("🔮 开始预测", type="primary"):
     result_df = pd.DataFrame(results, columns=['年份', 'ADT', '盈亏平衡ADT', 'HurdleADT'])
     result_df = result_df.round(0).astype(int)
 
-    st.subheader("📊 逐年预测结果")
-    st.dataframe(result_df, width='stretch', hide_index=True)
+    # st.subheader("📊 逐年预测结果")
+    # st.dataframe(result_df, width='stretch', hide_index=True)
 
     # 基于首年预测给出评估
     first = result_df.iloc[0]
@@ -188,7 +188,7 @@ if st.button("🔮 开始预测", type="primary"):
     break_even = first['盈亏平衡ADT']
     hurdle = first['HurdleADT']
 
-    st.subheader("📊 点位评估结果（基于首年预测）")
+    st.subheader("📊 点位评估结果")
     col1, col2, col3 = st.columns(3)
     col1.metric("预估日均杯数", f"{adt}")
     col2.metric("盈亏平衡杯数", f"{break_even}")
