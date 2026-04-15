@@ -144,7 +144,7 @@ def predict_year(year, Rent, area, Tier, channel, channel_sub, design_type, prov
         input_df[col] = input_df[col].astype('category')
 
     # 预测 ADT 和 NetRevenue
-    adt = adt_model.predict(input_df)[0]*1.6
+    adt = int(adt_model.predict(input_df)[0]*1.6)
     net = net_model.predict(input_df)[0]
 
     # ---------- 盈亏平衡点 ADT 计算 ----------
