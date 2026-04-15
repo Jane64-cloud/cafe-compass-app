@@ -228,9 +228,9 @@ if st.button("🔮 开始预测", type="primary"):
 
     #新增：添加开店建议
     first_year = result_df.iloc[0]
-    adt = first_year['ADT']
-    break_even = first_year['盈亏平衡ADT']
-    hurdle = first_year['HurdleADT']
+    adt = first_year['日均单量（ADT）']
+    break_even = first_year['盈亏平衡日均单量（ADT）']
+    hurdle = first_year['Hurdle日均单量（ADT）']
 
     if adt >= hurdle:
         suggestion = "✅ 建议开店"
