@@ -144,8 +144,8 @@ def predict_year(year, Rent, area, Tier, channel, channel_sub, ruixing_type, pro
 
     # 预测 ADT（瑞幸预估：星巴克模型输出 * 1.6，经验系数）
     adt = adt_model.predict(input_df)[0] * 1.6
-    net = net_model.predict(input_df)[0]   # 年收入（仍为星巴克口径，仅用于盈亏平衡计算）
-
+    net = net_model.predict(input_df)[0] * 0.8   # 年收入
+    
     # 固定成本率（瑞幸典型值）
     material_rate = 0.30
     labor_rate = 0.22
@@ -156,7 +156,7 @@ def predict_year(year, Rent, area, Tier, channel, channel_sub, ruixing_type, pro
     # 盈亏平衡ADT
     if (1 - total_cost_rate) > 0 and adt > 0:
         required_net = Rent / (1 - total_cost_rate)
-        avg_revenue_per_trans = net / adt   # 注意：net是星巴克口径，这里用星巴克收入与瑞幸ADT比值，实际有偏差，但作为示意
+        avg_revenue_per_trans = net / adt
         break_even_adt = int((required_net / avg_revenue_per_trans).round(0))
     else:
         break_even_adt = np.nan
