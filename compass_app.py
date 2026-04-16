@@ -81,7 +81,7 @@ with st.sidebar:
     st.text_input("城市等级", value=Tier, disabled=True)
 
     channel = st.selectbox("商圈", CHANNELS)
-    channel_sub = st.selectbox("子商圈", CHANNEL_SUBS)
+    channel_sub = st.selectbox("商区", CHANNEL_SUBS)
     ruixing_type = st.selectbox("门店类型", RUIXING_TYPES, index=0)
     area = st.number_input("面积（平方米）", min_value=10.0, value=100.0, step=10.0)
 
