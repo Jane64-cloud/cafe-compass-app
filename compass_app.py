@@ -190,9 +190,9 @@ if st.button("🔮 开始预测", type="primary"):
 
     st.subheader("📊 点位评估结果")
     col1, col2, col3 = st.columns(3)
-    col1.metric("预估日均杯数", f"{adt}")
-    col2.metric("盈亏平衡杯数", f"{break_even}")
-    col3.metric("建议最低杯数 (Hurdle)", f"{hurdle}")
+    col1.metric("预估日均订单量", f"{adt}")
+    col2.metric("盈亏平衡订单量", f"{break_even}")
+    col3.metric("建议最低订单量 (Hurdle)", f"{hurdle}")
 
     # 简单建议
     if adt >= hurdle:
