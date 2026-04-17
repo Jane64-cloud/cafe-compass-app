@@ -91,7 +91,7 @@ with st.sidebar:
     lease_term = 1
     rent_escalation = 0.0
 
-# ---------- 瑞幸店型映射到星巴克模型店型 ----------
+# ---------- 瑞幸店型映射到模型店型 ----------
 def map_to_starbucks_type(ruixing_type):
     mapping = {
         '快取店': '标准店',
@@ -117,7 +117,7 @@ def get_hurdle_multiplier(Tier, ruixing_type):
 def predict_year(year, Rent, area, Tier, channel, channel_sub, ruixing_type, province, city):
     # 获取城市编码
     city_spc = city_spc_mean.get(city, global_spc_mean)
-    city_at = city_at_mean.get(city, global_at_mean) * 0.4  # 瑞幸客单价约为星巴克的0.4
+    city_at = city_at_mean.get(city, global_at_mean) * 0.4  
 
     # 映射店型
     starbucks_type = map_to_starbucks_type(ruixing_type)
@@ -142,7 +142,7 @@ def predict_year(year, Rent, area, Tier, channel, channel_sub, ruixing_type, pro
     for col in cat_cols:
         input_df[col] = input_df[col].astype('category')
 
-    # 预测 ADT（瑞幸预估：星巴克模型输出 * 1.6，经验系数）
+    # 预测 ADT（瑞幸预估：模型输出 * 1.6，经验系数）
     adt = adt_model.predict(input_df)[0] * 1.6
     net = net_model.predict(input_df)[0] * 0.8   # 年收入
     
@@ -188,7 +188,7 @@ if st.button("🔮 开始预测", type="primary"):
     break_even = first['盈亏平衡ADT']
     hurdle = first['HurdleADT']
 
-    st.subheader("📊 点位评估结果")
+    st.subheader("📊 商区评估结果")
     col1, col2, col3 = st.columns(3)
     col1.metric("预估日均订单量", f"{adt}")
     col2.metric("盈亏平衡订单量", f"{break_even}")
