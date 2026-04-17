@@ -8,7 +8,7 @@ import random
 # ---------- 页面配置 ----------
 st.set_page_config(page_title="咖啡店罗盘", layout="wide")
 st.title("☕ 咖啡店罗盘")
-st.markdown("输入门店信息，系统将预测新店日均杯数。")
+st.markdown("输入门店信息，系统将预测商区日均订单量。")
 
 # ---------- 加载模型 ----------
 @st.cache_resource
